@@ -1,0 +1,18 @@
+import os
+from datetime import datetime
+
+CIFAR100_DIR = './data'
+
+#mean and std of cifar100 dataset
+CIFAR100_TRAIN_MEAN = (0.5070751592371323, 0.48654887331495095, 0.4409178433670343)
+CIFAR100_TRAIN_STD = (0.2673342858792401, 0.2564384629170883, 0.27615047132568404)
+
+EPOCH = 200
+MILESTONES = [60, 120, 160]
+
+CHECKPOINT_PATH = 'checkpoint'
+
+TIME_NOW = datetime.now().isoformat()
+
+LOG_DIR = 'runs'
+
