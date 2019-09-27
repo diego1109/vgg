@@ -1,7 +1,7 @@
 import os
 import sys
 import torchvision
-import torchvision.transforms as transform
+import torchvision.transforms as transforms
 
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import _LRScheduler
@@ -21,12 +21,12 @@ def get_network(args, use_gpu=True):
 
 
 def get_training_dataload(data_dir, mean, std, batch_size=16, num_workers=2, shuffle=True, download=True):
-    transform_train = transform.Compose([
-        transform.RandomCrop(32, padding=4),
-        transform.RandomHorizontalFlip(),
-        transform.RandomRotation(15),
-        transform.ToTensor(),
-        transform.Normalize(mean, std)
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
     ])
 
     if not os.path.exists(data_dir):
@@ -41,16 +41,26 @@ def get_training_dataload(data_dir, mean, std, batch_size=16, num_workers=2, shu
 
 
 def get_test_dataloader(data_dir, mean, std, batch_size=16, num_workers=2, shuffle=True, download=True):
-    transform_test = transform.Compose([
-        transform.ToTensor(),
-        transform.Normalize(mean, std)
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
     ])
 
-    cifar100_test = torchvision.datasets.CIFAR100(root=data_dir, train=False, download=download, transform=transform)
+    cifar100_test = torchvision.datasets.CIFAR100(root=data_dir, train=False, download=download, transform=transform_test)
     cifar100_test_loader = DataLoader(
         cifar100_test, shuffle=shuffle, num_workers=num_workers, batch_size=batch_size)
 
     return cifar100_test_loader
+    # transform_test = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(mean, std)
+    # ])
+    # # cifar100_test = CIFAR100Test(path, transforms=transform_test)
+    # cifar100_test = torchvision.datasets.CIFAR100(root=data_dir, train=False, download=True, transforms=transform_test)
+    # cifar100_test_loader = DataLoader(
+    #     cifar100_test, shuffle=shuffle, num_workers=num_workers, batch_size=batch_size)
+    #
+    # return cifar100_test_loader
 
 # 自定义了学习率调度器
 class WarmUpLR(_LRScheduler):

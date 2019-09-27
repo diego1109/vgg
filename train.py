@@ -4,10 +4,9 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.autograd import Variable
-from utils import get_network, get_training_dataload, get_test_dataloader, WarmUpLR
+
 from conf import global_settings as settings
-from tensorboardX import SummaryWriter
+from utils import get_network, get_training_dataload, get_test_dataloader, WarmUpLR
 
 
 def train(epoch):
@@ -15,9 +14,6 @@ def train(epoch):
     for batch_index, (images, labels) in enumerate(cifar100_training_loader):
         if epoch <= args.warm:
             warmup_scheduler.step()
-
-        images = Variable(images)
-        labels = Variable(labels)
 
         images = images.cuda()
         labels = labels.cuda()
@@ -31,13 +27,7 @@ def train(epoch):
         # total n_iter
         n_iter = (epoch - 1) * len(cifar100_training_loader) + batch_index + 1
 
-        # print('net.children():',net.children())
-
         last_layer = list(net.children())[-1]
-        # last_layer = list(net.children())
-        # print(last_layer)
-        #
-        # print(type(last_layer))
 
         # for name, para in last_layer.named_parameters():
         #     if 'weight' in name:
@@ -53,10 +43,26 @@ def train(epoch):
             total_samples=len(cifar100_training_loader.dataset)
         ))
 
-        # print(optimizer.param_groups)
-        # print(type(optimizer.param_groups))
-        # assert 1==2
 
+def eval_training(epoch):
+    net.eval()
+
+    test_loss = 0.0
+    correct = 0.0
+
+    for (images, labels) in cifar100_test_loader:
+        outputs = net(images.cuda())
+        loss = loss_function(outputs, labels.cuda())
+        test_loss += loss.item()
+        _, preds = outputs.max(1)
+        correct += preds.eq(labels.cuda()).sum()
+
+    print('Test set: Average loss: {:.4f}, Accuracy: {:.4f}'.format(
+        test_loss / len(cifar100_test_loader.dataset),
+        correct.float() / len(cifar100_test_loader.dataset)))
+    print()
+
+    return correct.float() / len(cifar100_test_loader.dataset)
 
 
 if __name__ == '__main__':
@@ -116,3 +122,12 @@ if __name__ == '__main__':
     best_acc = 0.0
     for epoch in range(1, settings.EPOCH):
         train(epoch)
+        acc = eval_training(epoch)
+
+        if epoch > settings.MILESTONES[1] and best_acc < acc:
+            torch.save(net.state_dict(), checkpoint_path.format(net=args.net, epoch=epoch, type='best'))
+            best_acc = acc
+            continue
+
+        if not epoch % settings.SAVE_EPOCH:
+            torch.save(net.state_dict(), checkpoint_path.format(net=args.net, epoch=epoch, type='regular'))

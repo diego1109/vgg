@@ -16,3 +16,5 @@ TIME_NOW = datetime.now().isoformat()
 
 LOG_DIR = 'runs'
 
+SAVE_EPOCH = 10
+
